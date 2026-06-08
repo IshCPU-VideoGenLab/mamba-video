@@ -36,7 +36,7 @@
 - Use `torch.float32` for discretization math (A, B → Ā, B̄) to avoid
   numerical instability, then cast back to float16 for the scan
 - The selective scan loop must be a simple Python for-loop over timesteps —
-  do NOT try to parallelize it (that's Phase 5's job with AVX2)
+  do NOT try to parallelize it (that's Phase 5's job, via portable SIMD kernels)
 - Always clamp Δ (delta) values to prevent NaN: `delta.clamp(min=1e-4)`
 - SSM state dimension `d_state` should default to 16 (not 64) to stay
   within memory budget on the Pentium Gold
