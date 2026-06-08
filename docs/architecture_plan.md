@@ -56,7 +56,7 @@ Input x (batch, seq, d_model)
 
 1. **Pure PyTorch scan**: The selective scan is a Python for-loop. This is
    slow but correct, portable, and runs on any CPU. Phase 5 replaces this
-   with AVX2 kernels.
+   with portable SIMD kernels (AVX2 on x86, NEON on ARM).
 
 2. **d_state = 16**: The SSM state dimension controls how much "memory"
    each position has of the past. 16 is a good balance between expressiveness
