@@ -26,7 +26,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
     # --- surgery subcommand ---
     surgery_parser = subparsers.add_parser("surgery", help="Run architecture surgery")
-    surgery_parser.add_argument("--model", type=str, default="wan-1.3b")
+    surgery_parser.add_argument("--model", type=str, default="Wan-AI/Wan2.1-T2V-1.3B-Diffusers")
     surgery_parser.add_argument("--model-path", type=str, default=None)
     surgery_parser.add_argument("--output", type=str, default="results")
     surgery_parser.add_argument(
@@ -48,7 +48,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
     # --- benchmark subcommand ---
     bench_parser = subparsers.add_parser("benchmark", help="Benchmark original vs modified")
-    bench_parser.add_argument("--model", type=str, default="wan-1.3b")
+    bench_parser.add_argument("--model", type=str, default="Wan-AI/Wan2.1-T2V-1.3B-Diffusers")
     bench_parser.add_argument("--model-path", type=str, default=None)
     bench_parser.add_argument("--modified-path", type=str, required=True)
     bench_parser.add_argument("--output", type=str, default="results/benchmarks")
@@ -62,7 +62,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     inspect_parser = subparsers.add_parser(
         "inspect", help="Inspect model attention modules without modifying"
     )
-    inspect_parser.add_argument("--model", type=str, default="wan-1.3b")
+    inspect_parser.add_argument("--model", type=str, default="Wan-AI/Wan2.1-T2V-1.3B-Diffusers")
     inspect_parser.add_argument("--model-path", type=str, default=None)
     inspect_parser.add_argument("--dtype", type=str, default="float16")
     inspect_parser.add_argument("--debug", action="store_true")
@@ -134,7 +134,7 @@ def cmd_surgery(args: argparse.Namespace) -> int:
 def cmd_inspect(args: argparse.Namespace) -> int:
     """Execute the inspect command."""
     import torch
-    from transformers import AutoModel
+    from diffusers import WanTransformer3DModel
     from mamba_video.surgery import find_attention_modules
 
     dtype_map = {"float16": torch.float16, "bfloat16": torch.bfloat16, "float32": torch.float32}
@@ -144,10 +144,11 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     logger.info("Loading model for inspection...")
 
     load_path = args.model_path or args.model
-    model = AutoModel.from_pretrained(
+    # Wan is a diffusers model; profile/inspect the diffusion transformer (DiT).
+    model = WanTransformer3DModel.from_pretrained(
         load_path,
+        subfolder="transformer",
         torch_dtype=torch_dtype,
-        trust_remote_code=True,
         low_cpu_mem_usage=True,
     )
 
