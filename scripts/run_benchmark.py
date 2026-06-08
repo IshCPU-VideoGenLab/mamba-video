@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Benchmark original vs modified model")
-    parser.add_argument("--original", type=str, default="wan-1.3b", help="Original model name")
+    parser.add_argument("--original", type=str, default="Wan-AI/Wan2.1-T2V-1.3B-Diffusers", help="Original model name")
     parser.add_argument("--original-path", type=str, default=None, help="Path to original weights")
     parser.add_argument("--modified", type=str, required=True, help="Path to modified model dir")
     parser.add_argument("--output", type=str, default="results/benchmarks")
@@ -33,24 +33,24 @@ def main() -> int:
     logger = logging.getLogger(__name__)
 
     import torch
-    from transformers import AutoModel
+    from diffusers import WanTransformer3DModel
 
     dtype_map = {"float16": torch.float16, "bfloat16": torch.bfloat16, "float32": torch.float32}
     torch_dtype = dtype_map.get(args.dtype, torch.float16)
 
-    # Load original
+    # Load original (Wan diffusion transformer)
     logger.info("Loading original model...")
     orig_path = args.original_path or args.original
-    original = AutoModel.from_pretrained(
-        orig_path, torch_dtype=torch_dtype, trust_remote_code=True, low_cpu_mem_usage=True,
+    original = WanTransformer3DModel.from_pretrained(
+        orig_path, subfolder="transformer", torch_dtype=torch_dtype, low_cpu_mem_usage=True,
     )
     original.eval()
 
     # Load modified
     logger.info("Loading modified model...")
     state_path = os.path.join(args.modified, "state_dict.pt")
-    modified = AutoModel.from_pretrained(
-        orig_path, torch_dtype=torch_dtype, trust_remote_code=True, low_cpu_mem_usage=True,
+    modified = WanTransformer3DModel.from_pretrained(
+        orig_path, subfolder="transformer", torch_dtype=torch_dtype, low_cpu_mem_usage=True,
     )
     modified.load_state_dict(torch.load(state_path, map_location="cpu"), strict=False)
     modified.eval()

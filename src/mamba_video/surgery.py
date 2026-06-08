@@ -343,7 +343,7 @@ def perform_surgery(
     logger.info("Loading model '%s'...", config.model_name)
 
     try:
-        from transformers import AutoModel
+        from diffusers import WanTransformer3DModel
 
         dtype_map = {
             "float16": torch.float16,
@@ -352,19 +352,20 @@ def perform_surgery(
         }
         torch_dtype = dtype_map.get(config.dtype, torch.float16)
 
+        # Wan is a diffusers model; operate on the diffusion transformer (DiT).
         load_kwargs = {
             "torch_dtype": torch_dtype,
-            "trust_remote_code": True,
+            "subfolder": "transformer",
         }
         if config.low_memory:
             load_kwargs["low_cpu_mem_usage"] = True
 
         if config.model_path:
-            model = AutoModel.from_pretrained(config.model_path, **load_kwargs)
+            model = WanTransformer3DModel.from_pretrained(config.model_path, **load_kwargs)
         else:
             from wan_profiler.loader import get_model_id
             model_id = get_model_id(config.model_name)
-            model = AutoModel.from_pretrained(model_id, **load_kwargs)
+            model = WanTransformer3DModel.from_pretrained(model_id, **load_kwargs)
 
     except ImportError:
         logger.error(
