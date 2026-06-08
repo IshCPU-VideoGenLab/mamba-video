@@ -1,0 +1,17 @@
+{
+  "model_name": "wan-1.3b",
+  "strategy": "progressive",
+  "num_replace": 4,
+  "init_method": "scaled",
+  "dtype": "float16",
+  "low_memory": true,
+  "mamba": {
+    "d_state": 16,
+    "d_conv": 4,
+    "expand": 2,
+    "dt_min": 0.0001,
+    "dt_max": 0.1,
+    "bias": false,
+    "conv_bias": true
+  }
+}

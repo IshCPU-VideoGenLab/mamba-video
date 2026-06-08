@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Create",
+      "Bash(python *)",
+      "Bash(pytest *)",
+      "Bash(pip *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(find *)",
+      "Bash(wc *)"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Bash(git checkout main)",
+      "Bash(git merge *)",
+      "Bash(rm -rf *)",
+      "Bash(sudo *)"
+    ]
+  },
+  "style": {
+    "python": {
+      "formatter": "none",
+      "max_line_length": 100,
+      "indent": 4,
+      "quotes": "double"
+    }
+  },
+  "project": {
+    "name": "mamba-video",
+    "org": "IshCPU-VideoGenLab",
+    "phase": 2,
+    "context_file": "CLAUDE.md",
+    "tasks_file": "tasks/todo.md",
+    "lessons_file": "lessons.md"
+  }
+}
