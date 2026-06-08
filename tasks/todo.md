@@ -73,5 +73,5 @@
 
 ## Notes
 - Milestones 1–2 are the critical path. Get a working Mamba block and surgery engine first.
-- Quality evaluation (Milestone 5) may need simplification if generating full video frames is too slow on the Pentium Gold. Consider evaluating on single-frame generation or latent-space metrics.
+- Quality evaluation (Milestone 5) may need simplification if generating full video frames is too slow within the commodity-hardware budget. Consider evaluating on single-frame generation or latent-space metrics.
 - The progressive replacement analysis (Milestone 6) produces the paper's Figure 2 — the quality-speed tradeoff curve. This is the most important result.
