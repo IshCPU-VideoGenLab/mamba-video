@@ -119,10 +119,32 @@ model depends on; (3) it is a critical, non-redundant function (Table 1: 36.8%).
 
 **Implication — the thesis is refined:** self-attention (22.6%) linearizes
 gracefully out of the box, but cross-attention (36.8%) **cannot be naively
-replaced**. It needs either (a) fine-tuning to recover the conditioning, or
-(b) a *less lossy* text-conditioning mechanism that preserves per-token
-interaction (e.g. linear cross-attention, O(n·m) but linear in each), rather
-than pooling. This is the central open architecture problem for Phase 2/3.
+replaced** by a pooled-text SSM.
+
+## Resolution: keep cross-attention — it isn't the bottleneck
+
+Before building a fancier cross-attention replacement, we checked whether cross-
+attention even *needs* replacing. Self-attention is O(n²) in image tokens;
+cross-attention is O(n·m) with a fixed text length m — i.e. only **linear** in
+image tokens. Timing both as tokens grow (`scripts/attn_scaling.py`):
+
+| tokens | self-attn (s) | cross-attn (s) |
+|-------:|--------------:|---------------:|
+| 256 | 1.26 | 2.04 |
+| 512 | 3.65 | 3.65 |
+| 768 | 7.10 | 5.17 |
+
+**tokens ×3 → self-attn ×5.6 (quadratic), cross-attn ×2.5 (linear).** Self-attention
+overtakes cross-attention by 768 tokens and dominates increasingly with
+resolution; cross-attention stays manageable.
+
+**Conclusion — the viable architecture:** replace **self-attention** with Mamba
+(kills the O(n²) term, degrades gracefully), and **keep cross-attention intact**
+(it's linear in n and carries the text conditioning a pooled SSM destroys). The
+"replace *all* attention" goal was wrong; the data says replace the quadratic
+half only. The graceful self-only result above (final cosine ~0.995) *is* this
+architecture. Cross-attention is no longer an open problem — it's a deliberate
+keep.
 
 ## Next
 
