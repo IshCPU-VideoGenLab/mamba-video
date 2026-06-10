@@ -38,6 +38,24 @@ plus per-block gating absorbs the perturbation — the network is far more robus
 to this surgery than a naive "untrained = garbage" expectation. This is
 encouraging for a fine-tune-to-recover strategy.
 
+## Multi-step denoise drift (does error compound?)
+
+Single-step drift does not capture how error accumulates across the denoising
+trajectory. We run a short (6-step) Euler denoise with the original model and
+with N self-attention blocks replaced, tracking per-step latent cosine vs. the
+original trajectory (`scripts/wan_surgery_multistep.py`):
+
+| N replaced | s1 | s2 | s3 | s4 | s5 | s6 (final) |
+|-----------:|----|----|----|----|----|-----------:|
+| 8  | 1.000 | 0.999 | 0.999 | 0.998 | 0.997 | **0.9953** |
+| 30 (all) | 0.999 | 0.998 | 0.996 | 0.993 | 0.989 | **0.9842** |
+
+**Finding:** drift compounds, but **gently** — losing ~0.003 cosine per step.
+Even with **all 30** self-attention blocks replaced by untrained Mamba, the
+final latent holds at **0.984** cosine after 6 steps. This is graceful, not
+catastrophic: strong evidence that the surgery is viable and that fine-tuning
+(Phase 6) should recover quality.
+
 ## Honest caveats
 
 - This is **single-step latent output drift**, not video quality. Errors compound
