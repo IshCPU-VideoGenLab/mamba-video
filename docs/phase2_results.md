@@ -97,11 +97,41 @@ both as the pure-Python loop and via the native NEON SSM kernel (Phase 5):
 (crossover halved), but the Mamba block's glue (marshalling + discretization)
 is the next optimization target.
 
+## Cross-attention is the hard wall (key negative result)
+
+Self-attention replaces gracefully, but cross-attention carries the text
+conditioning. We tried `WanMambaCrossAttention` — a **FiLM-conditioned Mamba**
+(pool the text → per-channel scale/shift → modulate image tokens → scan), an
+O(n+m) drop-in for `attn2` (`scripts/wan_cross_surgery.py`). Multi-step denoise
+drift vs. original:
+
+| config | s1 | s2 | s3 | s4 |
+|--------|----|----|----|----|
+| self-attn → Mamba (for reference) | 1.000 | 0.999 | 0.997 | 0.995 |
+| **cross-attn → FiLM-Mamba** | 0.984 | 0.857 | 0.506 | **0.371** |
+| **FULL (self+cross) → Mamba** | 0.974 | 0.794 | 0.510 | **0.398** |
+
+**Finding:** replacing cross-attention with the untrained FiLM-Mamba **collapses**
+the output over the denoise (0.37 final), unlike self-attention (0.995). Reasons:
+(1) cross-attention is **not gated** (added straight to the residual), so errors
+aren't dampened; (2) **mean-pooling the text destroys per-token alignment** the
+model depends on; (3) it is a critical, non-redundant function (Table 1: 36.8%).
+
+**Implication — the thesis is refined:** self-attention (22.6%) linearizes
+gracefully out of the box, but cross-attention (36.8%) **cannot be naively
+replaced**. It needs either (a) fine-tuning to recover the conditioning, or
+(b) a *less lossy* text-conditioning mechanism that preserves per-token
+interaction (e.g. linear cross-attention, O(n·m) but linear in each), rather
+than pooling. This is the central open architecture problem for Phase 2/3.
+
 ## Next
 
 1. ~~Extend to all 30 blocks; evaluate over a full multi-step denoise.~~ ✅ done
 2. ~~Measure speed with the SIMD scan wired in.~~ ✅ done — crossover ~512 tokens;
    next: zero-copy scan + fused discretization to win at smaller sizes.
-3. Design a text-conditioned SSM for cross-attention (the 36.8% Table 1 found).
-4. Fine-tune the Mamba blocks (Phase 6 ES) to recover quality.
+3. ~~Design a text-conditioned SSM for cross-attention.~~ ✅ tried FiLM-Mamba —
+   it collapses untrained (see above). Next: per-token linear cross-attention
+   (preserve text alignment) and/or fine-tune the conditioning.
+4. Fine-tune the Mamba blocks (Phase 6 ES) to recover quality — now clearly
+   *required* for cross-attention, optional-but-helpful for self-attention.
 5. VAE-decode latents (0.5 GB) to validate perceptual quality, not just cosine.
